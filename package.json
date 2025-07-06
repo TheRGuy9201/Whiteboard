@@ -14,13 +14,18 @@
     "@mui/icons-material": "^7.2.0",
     "@mui/material": "^7.2.0",
     "fabric": "^6.7.0",
+    "function-plot": "^1.25.1",
     "html2canvas": "^1.4.1",
     "jspdf": "^3.0.1",
+    "katex": "^0.16.22",
     "konva": "^9.3.20",
+    "mathjs": "^12.3.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-katex": "^3.1.0",
     "react-konva": "^19.0.7",
     "react-router-dom": "^7.6.3",
+    "react-toastify": "^10.0.5",
     "socket.io-client": "^4.8.1"
   },
   "devDependencies": {

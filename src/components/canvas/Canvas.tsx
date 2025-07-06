@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useWhiteboard } from '../../context/WhiteboardContext';
 import { DrawingTool } from '../../types';
+import type { CursorPosition } from '../../types';
 
 // Add type definitions to the fabric namespace
 declare global {
@@ -28,6 +29,7 @@ interface Position {
 
 const Canvas = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const [fabricCanvas, setFabricCanvas] = useState<any>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [lastPointerPosition, setLastPointerPosition] = useState<Position | null>(null);
@@ -42,16 +44,23 @@ const Canvas = () => {
     addObject,
     updateObject,
     updateCursorPosition,
+    cursors,
   } = useWhiteboard();
 
   // Initialize fabric canvas on mount
   useEffect(() => {
-    if (canvasRef.current && !fabricCanvas && window.fabric) {
+    if (canvasRef.current && containerRef.current && !fabricCanvas && window.fabric) {
+      // Get the container dimensions
+      const containerWidth = containerRef.current.clientWidth;
+      const containerHeight = containerRef.current.clientHeight;
+      
       const canvas = new window.fabric.Canvas(canvasRef.current, {
         isDrawingMode: false,
-        width: window.innerWidth,
-        height: window.innerHeight - 64, // Subtract toolbar height
-        backgroundColor: '#ffffff'
+        width: containerWidth,
+        height: containerHeight,
+        backgroundColor: '#ffffff',
+        selection: true,
+        preserveObjectStacking: true
       });
 
       // Set up canvas for free drawing
@@ -61,11 +70,16 @@ const Canvas = () => {
 
       // Event listeners for canvas resize
       const handleResize = () => {
-        canvas.setDimensions({
-          width: window.innerWidth,
-          height: window.innerHeight - 64
-        });
-        canvas.renderAll();
+        if (containerRef.current) {
+          const newWidth = containerRef.current.clientWidth;
+          const newHeight = containerRef.current.clientHeight;
+          
+          canvas.setDimensions({
+            width: newWidth,
+            height: newHeight
+          });
+          canvas.renderAll();
+        }
       };
 
       window.addEventListener('resize', handleResize);
@@ -82,7 +96,7 @@ const Canvas = () => {
         canvas.dispose();
       };
     }
-  }, [canvasRef]);
+  }, [canvasRef, containerRef]);
 
   // Update canvas settings when selectedTool changes
   useEffect(() => {
@@ -316,7 +330,15 @@ const Canvas = () => {
   }, [fabricCanvas, updateObject]);
 
   return (
-    <div className="canvas-container w-full h-full">
+    <div 
+      ref={containerRef} 
+      style={{ 
+        width: '100%', 
+        height: '100%', 
+        position: 'relative',
+        overflow: 'hidden'
+      }}
+    >
       <canvas
         ref={canvasRef}
         onMouseDown={handleMouseDown}
@@ -324,6 +346,38 @@ const Canvas = () => {
         onMouseUp={handleMouseUp}
         className="w-full h-full"
       />
+      
+      {/* Tool indicator in the bottom right */}
+      <div className="absolute bottom-4 right-4 bg-white bg-opacity-80 backdrop-blur-sm px-4 py-2 rounded-full shadow-md text-sm flex items-center">
+        <span className="mr-2">Current tool:</span>
+        <span className="font-semibold text-primary">
+          {Object.entries(DrawingTool).find(([, value]) => value === selectedTool)?.[0] || 'Select'}
+        </span>
+      </div>
+      
+      {/* Cursor positions of other users */}
+      {cursors.map((cursor: CursorPosition) => (
+        <div
+          key={cursor.userId}
+          className="absolute pointer-events-none"
+          style={{
+            left: `${cursor.x}px`,
+            top: `${cursor.y}px`,
+            transform: 'translate(-50%, -50%)',
+            zIndex: 100
+          }}
+        >
+          <div
+            className="w-4 h-4 rounded-full"
+            style={{ backgroundColor: cursor.color }}
+          />
+          <div 
+            className="absolute top-5 left-0 bg-black bg-opacity-70 text-white px-2 py-1 rounded text-xs whitespace-nowrap"
+          >
+            {cursor.userName}
+          </div>
+        </div>
+      ))}
     </div>
   );
 };

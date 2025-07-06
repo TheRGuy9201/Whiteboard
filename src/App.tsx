@@ -1,9 +1,11 @@
 import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import SplashScreen from './components/SplashScreen';
 import { ThemeProvider as MuiThemeProvider, createTheme, CssBaseline } from '@mui/material';
 import { AuthProvider } from './context/AuthContext';
 import { WhiteboardProvider } from './context/WhiteboardContext';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
+import { ColorPalette } from './types';
 import DashboardPage from './pages/DashboardPage';
 import WhiteboardPage from './pages/WhiteboardPage';
 
@@ -25,17 +27,28 @@ const AppContent = () => {
   const { mode } = useTheme();
   
   // Create Material UI theme based on mode
+  const colors = mode === 'light' ? ColorPalette.light : ColorPalette.dark;
+  
   const theme = createTheme({
     palette: {
       mode: mode,
       primary: {
-        main: '#5048E5',
+        main: colors.primary,
       },
       secondary: {
-        main: '#10B981',
+        main: colors.secondary,
+      },
+      error: {
+        main: colors.error,
+      },
+      success: {
+        main: colors.success,
+      },
+      warning: {
+        main: colors.warning,
       },
       background: {
-        default: mode === 'light' ? '#F9FAFC' : '#121212',
+        default: colors.background,
         paper: mode === 'light' ? '#FFFFFF' : '#1E1E1E',
       },
     },
@@ -72,8 +85,10 @@ const AppContent = () => {
       <CssBaseline />
       <Router>
         <Routes>
-          {/* Direct access to dashboard without authentication */}
-          <Route path="/" element={<DashboardPage />} />
+          {/* Splash screen at the root path */}
+          <Route path="/" element={<SplashScreen />} />
+          {/* Dashboard page */}
+          <Route path="/dashboard" element={<DashboardPage />} />
           {/* Whiteboard page without protection */}
           <Route path="/whiteboard/:id" element={<WhiteboardPage />} />
           <Route path="*" element={<Navigate to="/" />} />

@@ -8,6 +8,9 @@ interface ServerToClientEvents {
   cursorMoved: (cursor: any) => void;
   userJoined: (userId: string, userName: string) => void;
   userLeft: (userId: string) => void;
+  notebookUpdated: (notebookId: string, notebookData: NotebookData) => void;
+  sectionAdded: (notebookId: string, section: NotebookSection) => void;
+  pageAdded: (sectionId: string, pageId: string, pageName: string) => void;
   error: (message: string) => void;
 }
 
@@ -18,6 +21,9 @@ interface ClientToServerEvents {
   modifyObject: (whiteboardId: string, objectId: string, properties: any) => void;
   deleteObject: (whiteboardId: string, objectId: string) => void;
   moveCursor: (whiteboardId: string, cursor: any) => void;
+  createNotebook: (name: string, userId: string) => void;
+  addSection: (notebookId: string, sectionName: string, userId: string) => void;
+  addPage: (notebookId: string, sectionId: string, pageName: string, userId: string) => void;
 }
 
 interface InterServerEvents {
@@ -33,12 +39,12 @@ interface SocketData {
 // In-memory data structure for whiteboards
 interface WhiteboardObject {
   id: string;
-  type: string;
+  type: string; // Including new types like 'equation', 'function_plot', 'ruler', 'compass', 'protractor'
   createdBy: string;
   createdAt: number;
   updatedBy?: string;
   updatedAt?: number;
-  properties: any;
+  properties: any; // Will contain extended properties for math objects
 }
 
 interface WhiteboardData {
@@ -51,12 +57,32 @@ interface WhiteboardData {
   updatedAt: number;
 }
 
+// New interfaces for notebook structure
+interface NotebookSection {
+  id: string;
+  name: string;
+  pages: string[]; // Array of whiteboard IDs that serve as pages
+  createdAt: number;
+  updatedAt: number;
+}
+
+interface NotebookData {
+  id: string;
+  name: string;
+  ownerId: string;
+  sections: NotebookSection[];
+  collaborators: Record<string, { role: string; lastActive: number }>;
+  createdAt: number;
+  updatedAt: number;
+}
+
 export const setupSocketHandlers = (
   io: Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>
 ): void => {
   // In-memory storage
   const whiteboardUsers = new Map<string, Set<string>>();
   const whiteboards = new Map<string, WhiteboardData>();
+  const notebooks = new Map<string, NotebookData>();
 
   io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>) => {
     console.log(`User connected: ${socket.id}`);
@@ -244,6 +270,127 @@ export const setupSocketHandlers = (
         socket.to(whiteboardId).emit('cursorMoved', cursorWithUser);
       } catch (error) {
         console.error('Error in moveCursor:', error);
+      }
+    });
+
+    // Handle notebook operations
+    socket.on('createNotebook', (name: string, userId: string) => {
+      try {
+        const notebookId = `notebook-${Date.now()}`;
+        const newNotebook: NotebookData = {
+          id: notebookId,
+          name,
+          ownerId: userId,
+          sections: [],
+          collaborators: {
+            [userId]: { role: 'owner', lastActive: Date.now() }
+          },
+          createdAt: Date.now(),
+          updatedAt: Date.now()
+        };
+        
+        // Store in memory
+        notebooks.set(notebookId, newNotebook);
+        
+        console.log(`Notebook ${notebookId} created by ${userId}`);
+        
+        // Emit to the user
+        socket.emit('notebookUpdated', notebookId, newNotebook);
+      } catch (error) {
+        console.error('Error in createNotebook:', error);
+        socket.emit('error', 'Failed to create notebook');
+      }
+    });
+    
+    socket.on('addSection', (notebookId: string, sectionName: string, userId: string) => {
+      try {
+        const notebook = notebooks.get(notebookId);
+        if (!notebook) {
+          socket.emit('error', 'Notebook not found');
+          return;
+        }
+        
+        // Check permissions
+        if (notebook.ownerId !== userId && !notebook.collaborators[userId]) {
+          socket.emit('error', 'You do not have permission to modify this notebook');
+          return;
+        }
+        
+        const sectionId = `section-${Date.now()}`;
+        const newSection: NotebookSection = {
+          id: sectionId,
+          name: sectionName,
+          pages: [],
+          createdAt: Date.now(),
+          updatedAt: Date.now()
+        };
+        
+        // Add to notebook
+        notebook.sections.push(newSection);
+        notebook.updatedAt = Date.now();
+        notebooks.set(notebookId, notebook);
+        
+        console.log(`Section ${sectionId} added to notebook ${notebookId} by ${userId}`);
+        
+        // Emit to all collaborators
+        socket.emit('sectionAdded', notebookId, newSection);
+        socket.to(notebookId).emit('sectionAdded', notebookId, newSection);
+      } catch (error) {
+        console.error('Error in addSection:', error);
+        socket.emit('error', 'Failed to add section');
+      }
+    });
+    
+    socket.on('addPage', (notebookId: string, sectionId: string, pageName: string, userId: string) => {
+      try {
+        const notebook = notebooks.get(notebookId);
+        if (!notebook) {
+          socket.emit('error', 'Notebook not found');
+          return;
+        }
+        
+        // Check permissions
+        if (notebook.ownerId !== userId && !notebook.collaborators[userId]) {
+          socket.emit('error', 'You do not have permission to modify this notebook');
+          return;
+        }
+        
+        // Find section
+        const section = notebook.sections.find(s => s.id === sectionId);
+        if (!section) {
+          socket.emit('error', 'Section not found');
+          return;
+        }
+        
+        // Create a new whiteboard for the page
+        const pageId = `whiteboard-${Date.now()}`;
+        const newWhiteboard: WhiteboardData = {
+          id: pageId,
+          name: pageName,
+          ownerId: userId,
+          objects: [],
+          collaborators: { ...notebook.collaborators },
+          createdAt: Date.now(),
+          updatedAt: Date.now()
+        };
+        
+        // Add to storage
+        whiteboards.set(pageId, newWhiteboard);
+        
+        // Add page to section
+        section.pages.push(pageId);
+        section.updatedAt = Date.now();
+        notebook.updatedAt = Date.now();
+        notebooks.set(notebookId, notebook);
+        
+        console.log(`Page ${pageId} added to section ${sectionId} in notebook ${notebookId} by ${userId}`);
+        
+        // Emit to all collaborators
+        socket.emit('pageAdded', sectionId, pageId, pageName);
+        socket.to(notebookId).emit('pageAdded', sectionId, pageId, pageName);
+      } catch (error) {
+        console.error('Error in addPage:', error);
+        socket.emit('error', 'Failed to add page');
       }
     });
 
