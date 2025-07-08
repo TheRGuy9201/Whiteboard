@@ -36,12 +36,12 @@ const HomePage: React.FC = () => {
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
               <Palette className="w-5 h-5 text-white" />
             </div>
-            <span className="text-xl font-bold">Whiteboard Pro</span>
+            <span className="text-xl font-bold text-white">Whiteboard Pro</span>
           </div>
           <div className="flex items-center space-x-4">
             <Link
               to="/dashboard"
-              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary transition-colors"
+              className="px-4 py-2 text-sm font-medium text-white hover:text-blue-200 transition-colors"
             >
               Dashboard
             </Link>
@@ -62,7 +62,7 @@ const HomePage: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
+            className="text-5xl md:text-7xl font-bold mb-6 gradient-text text-shadow-lg"
           >
             Create, Collaborate, Innovate
           </motion.h1>
@@ -70,7 +70,7 @@ const HomePage: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto"
+            className="text-xl md:text-2xl text-gray-700 dark:text-gray-200 mb-8 max-w-2xl mx-auto font-medium text-shadow"
           >
             The modern whiteboard experience for teams, students, and creative minds. 
             Draw, sketch, and brainstorm together in real-time.
@@ -99,7 +99,7 @@ const HomePage: React.FC = () => {
       <section className="container mx-auto px-4 py-20">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900 dark:text-white">
               Everything you need to create
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-300">
@@ -118,7 +118,7 @@ const HomePage: React.FC = () => {
                 <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
                   <feature.icon className="w-6 h-6 text-primary" />
                 </div>
-                <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
+                <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">{feature.title}</h3>
                 <p className="text-gray-600 dark:text-gray-300">{feature.description}</p>
               </motion.div>
             ))}
