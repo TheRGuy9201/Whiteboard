@@ -111,7 +111,7 @@ export type WhiteboardAction =
   | { type: 'CLEAR_CANVAS' }
   | { type: 'UNDO' }
   | { type: 'REDO' }
-  | { type: 'LOAD_WHITEBOARD'; payload: WhiteboardPage[] }
+  | { type: 'LOAD_WHITEBOARD'; payload: { pages: WhiteboardPage[]; currentPageId: string } }
   | { type: 'ADD_PAGE'; payload: WhiteboardPage }
   | { type: 'SET_CURRENT_PAGE'; payload: string }
   | { type: 'TOGGLE_PAGE_EXPANDED'; payload: string }

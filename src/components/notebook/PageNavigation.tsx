@@ -77,9 +77,6 @@ export const PageNavigation: React.FC = () => {
                   )}>
                     {page.name}
                   </span>
-                  <span className="text-xs text-gray-500">
-                    ({page.paths.length} drawing{page.paths.length !== 1 ? 's' : ''})
-                  </span>
                 </div>
               </div>
 
@@ -123,7 +120,7 @@ export const PageNavigation: React.FC = () => {
                   <div className="aspect-video bg-gray-50 rounded border flex items-center justify-center">
                     {page.paths.length > 0 ? (
                       <div className="text-sm text-gray-600">
-                        ✏️ {page.paths.length} drawing{page.paths.length !== 1 ? 's' : ''}
+                        ✏️ Has content
                       </div>
                     ) : (
                       <div className="text-sm text-gray-400">Empty page</div>

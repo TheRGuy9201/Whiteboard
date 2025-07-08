@@ -7,6 +7,7 @@ import type { DrawingPath, Point } from '@/types'
 export const WhiteboardCanvas: React.FC = () => {
   const { state, dispatch, sendDrawing, getCurrentPage } = useWhiteboard()
   const stageRef = useRef<any>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
   const [currentPath, setCurrentPath] = useState<DrawingPath | null>(null)
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 })
 
@@ -15,34 +16,66 @@ export const WhiteboardCanvas: React.FC = () => {
 
   useEffect(() => {
     const updateSize = () => {
-      const container = stageRef.current?.container()
-      if (container) {
+      // Use the container ref to get proper dimensions
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect()
         setStageSize({
-          width: container.offsetWidth,
-          height: container.offsetHeight,
+          width: rect.width,
+          height: rect.height,
         })
       }
     }
 
-    updateSize()
+    // Initial size setup with multiple attempts
+    const setupSize = () => {
+      updateSize()
+      setTimeout(updateSize, 100)
+      setTimeout(updateSize, 500)
+    }
+    
+    setupSize()
     window.addEventListener('resize', updateSize)
     return () => window.removeEventListener('resize', updateSize)
   }, [])
 
+  const getCursorStyle = () => {
+    switch (state.currentTool) {
+      case 'pen':
+        return 'cursor-crosshair'
+      case 'highlighter':
+        return 'cursor-crosshair'
+      case 'eraser':
+        return 'cursor-crosshair'
+      case 'select':
+        return 'cursor-move'
+      default:
+        return 'cursor-crosshair'
+    }
+  }
+
   const handleMouseDown = (e: any) => {
-    if (state.currentTool === 'select' || !state.currentPageId) return
+    if (state.currentTool === 'select' || !state.currentPageId) {
+      return
+    }
 
     const stage = stageRef.current
+    if (!stage) {
+      return
+    }
+
     const point = stage.getPointerPosition()
+    if (!point) {
+      return
+    }
     
     const newPath: DrawingPath = {
       id: generateId(),
       points: [{ x: point.x, y: point.y }],
-      color: state.currentColor,
-      width: state.currentWidth,
+      color: state.currentTool === 'eraser' ? '#FFFFFF' : state.currentColor,
+      width: state.currentTool === 'eraser' ? state.currentWidth * 2 : state.currentWidth,
       tool: state.currentTool as any,
       timestamp: Date.now(),
-      pageId: state.currentPageId,
+      pageId: state.currentPageId!,
     }
 
     setCurrentPath(newPath)
@@ -50,10 +83,14 @@ export const WhiteboardCanvas: React.FC = () => {
   }
 
   const handleMouseMove = (e: any) => {
-    if (!state.isDrawing || !currentPath) return
+    if (!state.isDrawing || !currentPath || state.currentTool === 'select') {
+      return
+    }
 
     const stage = stageRef.current
     const point = stage.getPointerPosition()
+    
+    if (!point) return
     
     const updatedPath = {
       ...currentPath,
@@ -64,7 +101,9 @@ export const WhiteboardCanvas: React.FC = () => {
   }
 
   const handleMouseUp = () => {
-    if (!currentPath) return
+    if (!currentPath) {
+      return
+    }
 
     dispatch({ type: 'ADD_PATH', payload: currentPath })
     dispatch({ type: 'STOP_DRAWING' })
@@ -73,7 +112,7 @@ export const WhiteboardCanvas: React.FC = () => {
   }
 
   const renderPath = (path: DrawingPath) => {
-    if (path.points.length < 2) return null
+    if (path.points.length < 1) return null
 
     const points = path.points.flatMap(p => [p.x, p.y])
     
@@ -93,7 +132,7 @@ export const WhiteboardCanvas: React.FC = () => {
   }
 
   const renderCurrentPath = () => {
-    if (!currentPath || currentPath.points.length < 2) return null
+    if (!currentPath || currentPath.points.length < 1) return null
 
     const points = currentPath.points.flatMap(p => [p.x, p.y])
     
@@ -112,42 +151,38 @@ export const WhiteboardCanvas: React.FC = () => {
   }
 
   return (
-    <div className="w-full h-full bg-white relative">
-      <Stage
-        ref={stageRef}
-        width={stageSize.width}
-        height={stageSize.height}
-        onMouseDown={handleMouseDown}
-        onMousemove={handleMouseMove}
-        onMouseup={handleMouseUp}
-        className="cursor-crosshair"
-      >
-        <Layer>
-          {/* Grid background */}
-          {Array.from({ length: Math.ceil(stageSize.width / 20) }).map((_, i) => (
-            <Line
-              key={`v-${i}`}
-              points={[i * 20, 0, i * 20, stageSize.height]}
-              stroke="rgba(0,0,0,0.05)"
-              strokeWidth={1}
-            />
-          ))}
-          {Array.from({ length: Math.ceil(stageSize.height / 20) }).map((_, i) => (
-            <Line
-              key={`h-${i}`}
-              points={[0, i * 20, stageSize.width, i * 20]}
-              stroke="rgba(0,0,0,0.05)"
-              strokeWidth={1}
-            />
-          ))}
-          
-          {/* Existing paths */}
-          {currentPaths.map(renderPath)}
-          
-          {/* Current drawing path */}
-          {renderCurrentPath()}
-        </Layer>
-      </Stage>
+    <div 
+      ref={containerRef}
+      className="w-full h-full bg-white relative min-h-0" 
+      style={{ pointerEvents: 'auto' }}
+    >
+      {stageSize.width > 0 && stageSize.height > 0 ? (
+        <Stage
+          ref={stageRef}
+          width={stageSize.width}
+          height={stageSize.height}
+          onMouseDown={handleMouseDown}
+          onMousemove={handleMouseMove}
+          onMouseup={handleMouseUp}
+          onTouchStart={handleMouseDown}
+          onTouchMove={handleMouseMove}
+          onTouchEnd={handleMouseUp}
+          className={getCursorStyle()}
+          style={{ cursor: 'crosshair' }}
+        >
+          <Layer>            
+            {/* Existing paths */}
+            {currentPaths.map(renderPath)}
+            
+            {/* Current drawing path */}
+            {renderCurrentPath()}
+          </Layer>
+        </Stage>
+      ) : (
+        <div className="w-full h-full flex items-center justify-center text-gray-500">
+          Loading canvas...
+        </div>
+      )}
     </div>
   )
 }

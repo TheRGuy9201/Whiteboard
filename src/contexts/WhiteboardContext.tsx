@@ -2,24 +2,29 @@ import React, { createContext, useContext, useReducer, useEffect, useState } fro
 import type { WhiteboardContextType, WhiteboardState, WhiteboardAction, DrawingPath, User, Room, WhiteboardPage } from '@/types'
 import { generateId } from '@/lib/utils'
 
-const initialState: WhiteboardState = {
-  pages: [{
-    id: generateId(),
-    name: 'Page 1',
-    paths: [],
-    isExpanded: true,
-    createdAt: new Date(),
-    updatedAt: new Date()
-  }],
-  currentPageId: null,
-  currentTool: 'pen',
-  currentColor: '#000000',
-  currentWidth: 2,
-  isDrawing: false,
-  canvasSize: { width: 1920, height: 1080 },
-  zoom: 1,
-  offset: { x: 0, y: 0 }
+const generateInitialState = (): WhiteboardState => {
+  const firstPageId = generateId()
+  return {
+    pages: [{
+      id: firstPageId,
+      name: 'Page 1',
+      paths: [],
+      isExpanded: true,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }],
+    currentPageId: firstPageId,
+    currentTool: 'pen',
+    currentColor: '#000000',
+    currentWidth: 2,
+    isDrawing: false,
+    canvasSize: { width: 1920, height: 1080 },
+    zoom: 1,
+    offset: { x: 0, y: 0 }
+  }
 }
+
+const initialState = generateInitialState()
 
 const whiteboardReducer = (state: WhiteboardState, action: WhiteboardAction): WhiteboardState => {
   switch (action.type) {
@@ -113,7 +118,11 @@ const whiteboardReducer = (state: WhiteboardState, action: WhiteboardAction): Wh
       // TODO: Implement redo functionality with history
       return state
     case 'LOAD_WHITEBOARD':
-      return { ...state, pages: action.payload }
+      return { 
+        ...state, 
+        pages: action.payload.pages,
+        currentPageId: action.payload.currentPageId || (action.payload.pages?.[0]?.id || state.currentPageId)
+      }
     default:
       return state
   }
@@ -135,22 +144,25 @@ export const WhiteboardProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [room, setRoom] = useState<Room | null>(null)
   const [isConnected, setIsConnected] = useState(false)
 
-  // Initialize first page as current
-  React.useEffect(() => {
-    if (state.pages.length > 0 && !state.currentPageId) {
-      dispatch({ type: 'SET_CURRENT_PAGE', payload: state.pages[0].id })
-    }
-  }, [state.pages, state.currentPageId])
-
   // Load data from localStorage on mount
   useEffect(() => {
     const savedWhiteboard = localStorage.getItem('whiteboard-data')
     if (savedWhiteboard) {
       try {
         const parsed = JSON.parse(savedWhiteboard)
-        dispatch({ type: 'LOAD_WHITEBOARD', payload: parsed.pages })
-        if (parsed.currentPageId) {
-          dispatch({ type: 'SET_CURRENT_PAGE', payload: parsed.currentPageId })
+        if (parsed.pages && parsed.pages.length > 0) {
+          // Set current page to saved one or first page if saved one doesn't exist
+          const currentPageId = parsed.currentPageId && parsed.pages.find((p: any) => p.id === parsed.currentPageId) 
+            ? parsed.currentPageId 
+            : parsed.pages[0].id
+          
+          dispatch({ 
+            type: 'LOAD_WHITEBOARD', 
+            payload: { 
+              pages: parsed.pages, 
+              currentPageId: currentPageId 
+            } 
+          })
         }
       } catch (error) {
         console.error('Error loading whiteboard data:', error)

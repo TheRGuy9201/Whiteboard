@@ -49,12 +49,12 @@ const WhiteboardPage: React.FC = () => {
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 flex">
+      <div className="flex-1 flex overflow-hidden">
         {/* Page Navigation - Toggleable */}
         {isPageNavVisible && <PageNavigation />}
         
         {/* Canvas Area */}
-        <div className="flex-1 relative bg-white">
+        <div className="flex-1 relative bg-white overflow-hidden">
           <WhiteboardCanvas />
         </div>
       </div>
