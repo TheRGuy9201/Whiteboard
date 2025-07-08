@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useReducer, useEffect, useState } from 'react'
-import { io, Socket } from 'socket.io-client'
 import type { WhiteboardContextType, WhiteboardState, WhiteboardAction, DrawingPath, User, Room, WhiteboardPage } from '@/types'
 import { generateId } from '@/lib/utils'
 
@@ -134,7 +133,6 @@ export const WhiteboardProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [state, dispatch] = useReducer(whiteboardReducer, initialState)
   const [users, setUsers] = useState<User[]>([])
   const [room, setRoom] = useState<Room | null>(null)
-  const [socket, setSocket] = useState<Socket | null>(null)
   const [isConnected, setIsConnected] = useState(false)
 
   // Initialize first page as current
@@ -142,6 +140,31 @@ export const WhiteboardProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     if (state.pages.length > 0 && !state.currentPageId) {
       dispatch({ type: 'SET_CURRENT_PAGE', payload: state.pages[0].id })
     }
+  }, [state.pages, state.currentPageId])
+
+  // Load data from localStorage on mount
+  useEffect(() => {
+    const savedWhiteboard = localStorage.getItem('whiteboard-data')
+    if (savedWhiteboard) {
+      try {
+        const parsed = JSON.parse(savedWhiteboard)
+        dispatch({ type: 'LOAD_WHITEBOARD', payload: parsed.pages })
+        if (parsed.currentPageId) {
+          dispatch({ type: 'SET_CURRENT_PAGE', payload: parsed.currentPageId })
+        }
+      } catch (error) {
+        console.error('Error loading whiteboard data:', error)
+      }
+    }
+  }, [])
+
+  // Save data to localStorage whenever state changes
+  useEffect(() => {
+    const dataToSave = {
+      pages: state.pages,
+      currentPageId: state.currentPageId
+    }
+    localStorage.setItem('whiteboard-data', JSON.stringify(dataToSave))
   }, [state.pages, state.currentPageId])
 
   const addNewPage = () => {
@@ -178,65 +201,25 @@ export const WhiteboardProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     return state.pages.find(page => page.id === state.currentPageId)
   }
 
-  useEffect(() => {
-    const newSocket = io('http://localhost:3003')
-    setSocket(newSocket)
-
-    newSocket.on('connect', () => {
-      setIsConnected(true)
-    })
-
-    newSocket.on('disconnect', () => {
-      setIsConnected(false)
-    })
-
-    newSocket.on('user-joined', (user: User) => {
-      setUsers(prev => [...prev, user])
-    })
-
-    newSocket.on('user-left', (userId: string) => {
-      setUsers(prev => prev.filter(user => user.id !== userId))
-    })
-
-    newSocket.on('drawing-update', (path: DrawingPath) => {
-      dispatch({ type: 'ADD_PATH', payload: path })
-    })
-
-    newSocket.on('canvas-cleared', () => {
-      dispatch({ type: 'CLEAR_CANVAS' })
-    })
-
-    return () => {
-      newSocket.disconnect()
-    }
-  }, [])
-
   const joinRoom = (roomId: string, userName: string) => {
-    if (socket) {
-      socket.emit('join-room', { roomId, userName })
-      setRoom({ id: roomId, name: `Room ${roomId}`, users: [], createdAt: new Date(), updatedAt: new Date() })
-    }
+    // For offline mode, we simulate joining a room
+    setRoom({ id: roomId, name: `Room ${roomId}`, users: [], createdAt: new Date(), updatedAt: new Date() })
+    setIsConnected(true)
   }
 
   const leaveRoom = () => {
-    if (socket && room) {
-      socket.emit('leave-room', room.id)
-      setRoom(null)
-      setUsers([])
-    }
+    setRoom(null)
+    setUsers([])
+    setIsConnected(false)
   }
 
   const sendDrawing = (path: DrawingPath) => {
-    if (socket && room) {
-      socket.emit('drawing-update', { roomId: room.id, path })
-    }
+    // In offline mode, drawings are already added to state via dispatch
+    // No need to send to server
   }
 
   const clearCanvas = () => {
     dispatch({ type: 'CLEAR_CANVAS' })
-    if (socket && room) {
-      socket.emit('clear-canvas', room.id)
-    }
   }
 
   const undo = () => {
