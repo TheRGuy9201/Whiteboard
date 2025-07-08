@@ -6,7 +6,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function generateId(): string {
-  return Math.random().toString(36).substr(2, 9)
+  return Math.random().toString(36).substr(2, 9) + Date.now().toString(36)
 }
 
 export function debounce<T extends (...args: any[]) => void>(

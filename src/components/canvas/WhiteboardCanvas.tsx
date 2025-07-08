@@ -5,10 +5,13 @@ import { generateId } from '@/lib/utils'
 import type { DrawingPath, Point } from '@/types'
 
 export const WhiteboardCanvas: React.FC = () => {
-  const { state, dispatch, sendDrawing } = useWhiteboard()
+  const { state, dispatch, sendDrawing, getCurrentPage } = useWhiteboard()
   const stageRef = useRef<any>(null)
   const [currentPath, setCurrentPath] = useState<DrawingPath | null>(null)
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 })
+
+  const currentPage = getCurrentPage()
+  const currentPaths = currentPage?.paths || []
 
   useEffect(() => {
     const updateSize = () => {
@@ -27,7 +30,7 @@ export const WhiteboardCanvas: React.FC = () => {
   }, [])
 
   const handleMouseDown = (e: any) => {
-    if (state.currentTool === 'select') return
+    if (state.currentTool === 'select' || !state.currentPageId) return
 
     const stage = stageRef.current
     const point = stage.getPointerPosition()
@@ -39,6 +42,7 @@ export const WhiteboardCanvas: React.FC = () => {
       width: state.currentWidth,
       tool: state.currentTool as any,
       timestamp: Date.now(),
+      pageId: state.currentPageId,
     }
 
     setCurrentPath(newPath)
@@ -108,7 +112,7 @@ export const WhiteboardCanvas: React.FC = () => {
   }
 
   return (
-    <div className="w-full h-full bg-white dark:bg-gray-900 relative">
+    <div className="w-full h-full bg-white relative">
       <Stage
         ref={stageRef}
         width={stageSize.width}
@@ -124,7 +128,7 @@ export const WhiteboardCanvas: React.FC = () => {
             <Line
               key={`v-${i}`}
               points={[i * 20, 0, i * 20, stageSize.height]}
-              stroke="rgba(0,0,0,0.1)"
+              stroke="rgba(0,0,0,0.05)"
               strokeWidth={1}
             />
           ))}
@@ -132,13 +136,13 @@ export const WhiteboardCanvas: React.FC = () => {
             <Line
               key={`h-${i}`}
               points={[0, i * 20, stageSize.width, i * 20]}
-              stroke="rgba(0,0,0,0.1)"
+              stroke="rgba(0,0,0,0.05)"
               strokeWidth={1}
             />
           ))}
           
           {/* Existing paths */}
-          {state.paths.map(renderPath)}
+          {currentPaths.map(renderPath)}
           
           {/* Current drawing path */}
           {renderCurrentPath()}

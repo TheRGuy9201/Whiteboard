@@ -10,10 +10,21 @@ export interface DrawingPath {
   width: number
   tool: 'pen' | 'highlighter' | 'eraser'
   timestamp: number
+  pageId: string
+}
+
+export interface WhiteboardPage {
+  id: string
+  name: string
+  paths: DrawingPath[]
+  isExpanded: boolean
+  createdAt: Date
+  updatedAt: Date
 }
 
 export interface WhiteboardState {
-  paths: DrawingPath[]
+  pages: WhiteboardPage[]
+  currentPageId: string | null
   currentTool: 'pen' | 'highlighter' | 'eraser' | 'select'
   currentColor: string
   currentWidth: number
@@ -79,6 +90,12 @@ export interface WhiteboardContextType {
   clearCanvas: () => void
   undo: () => void
   redo: () => void
+  addNewPage: () => void
+  setCurrentPage: (pageId: string) => void
+  togglePageExpanded: (pageId: string) => void
+  deletePage: (pageId: string) => void
+  clearPage: (pageId: string) => void
+  getCurrentPage: () => WhiteboardPage | undefined
 }
 
 export type WhiteboardAction =
@@ -94,4 +111,9 @@ export type WhiteboardAction =
   | { type: 'CLEAR_CANVAS' }
   | { type: 'UNDO' }
   | { type: 'REDO' }
-  | { type: 'LOAD_WHITEBOARD'; payload: DrawingPath[] }
+  | { type: 'LOAD_WHITEBOARD'; payload: WhiteboardPage[] }
+  | { type: 'ADD_PAGE'; payload: WhiteboardPage }
+  | { type: 'SET_CURRENT_PAGE'; payload: string }
+  | { type: 'TOGGLE_PAGE_EXPANDED'; payload: string }
+  | { type: 'DELETE_PAGE'; payload: string }
+  | { type: 'CLEAR_PAGE'; payload: string }
