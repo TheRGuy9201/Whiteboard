@@ -18,11 +18,15 @@ export const WhiteboardCanvas: React.FC = () => {
     const updateSize = () => {
       // Use the container ref to get proper dimensions
       if (containerRef.current) {
-        const rect = containerRef.current.getBoundingClientRect()
-        setStageSize({
-          width: rect.width,
-          height: rect.height,
-        })
+        // Get the whiteboard container div (the one with rounded corners)
+        const whiteboardDiv = containerRef.current.querySelector('div')
+        if (whiteboardDiv) {
+          const rect = whiteboardDiv.getBoundingClientRect()
+          setStageSize({
+            width: rect.width,
+            height: rect.height,
+          })
+        }
       }
     }
 
@@ -31,6 +35,7 @@ export const WhiteboardCanvas: React.FC = () => {
       updateSize()
       setTimeout(updateSize, 100)
       setTimeout(updateSize, 500)
+      setTimeout(updateSize, 1000) // Add one more attempt for good measure
     }
     
     setupSize()
@@ -153,9 +158,10 @@ export const WhiteboardCanvas: React.FC = () => {
   return (
     <div 
       ref={containerRef}
-      className="w-full h-full bg-white relative min-h-0" 
+      className="w-full h-full relative min-h-0 p-2" 
       style={{ pointerEvents: 'auto' }}
     >
+      <div className="w-full h-full bg-white rounded-lg shadow-lg overflow-hidden">
       {stageSize.width > 0 && stageSize.height > 0 ? (
         <Stage
           ref={stageRef}
@@ -183,6 +189,7 @@ export const WhiteboardCanvas: React.FC = () => {
           Loading canvas...
         </div>
       )}
+      </div>
     </div>
   )
 }

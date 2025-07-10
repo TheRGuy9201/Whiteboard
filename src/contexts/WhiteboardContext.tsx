@@ -17,6 +17,7 @@ const generateInitialState = (): WhiteboardState => {
     currentTool: 'pen',
     currentColor: '#000000',
     currentWidth: 2,
+    currentOpacity: 100, // ✅ Added
     isDrawing: false,
     canvasSize: { width: 1920, height: 1080 },
     zoom: 1,
@@ -34,6 +35,8 @@ const whiteboardReducer = (state: WhiteboardState, action: WhiteboardAction): Wh
       return { ...state, currentColor: action.payload }
     case 'SET_WIDTH':
       return { ...state, currentWidth: action.payload }
+    case 'SET_OPACITY':
+      return { ...state, currentOpacity: action.payload } // ✅ Added
     case 'START_DRAWING':
       return { ...state, isDrawing: true }
     case 'STOP_DRAWING':
@@ -144,18 +147,15 @@ export const WhiteboardProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [room, setRoom] = useState<Room | null>(null)
   const [isConnected, setIsConnected] = useState(false)
 
-  // Load data from localStorage on mount
   useEffect(() => {
     const savedWhiteboard = localStorage.getItem('whiteboard-data')
     if (savedWhiteboard) {
       try {
         const parsed = JSON.parse(savedWhiteboard)
         if (parsed.pages && parsed.pages.length > 0) {
-          // Set current page to saved one or first page if saved one doesn't exist
           const currentPageId = parsed.currentPageId && parsed.pages.find((p: any) => p.id === parsed.currentPageId) 
             ? parsed.currentPageId 
             : parsed.pages[0].id
-          
           dispatch({ 
             type: 'LOAD_WHITEBOARD', 
             payload: { 
@@ -170,7 +170,6 @@ export const WhiteboardProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   }, [])
 
-  // Save data to localStorage whenever state changes
   useEffect(() => {
     const dataToSave = {
       pages: state.pages,
@@ -214,7 +213,6 @@ export const WhiteboardProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   }
 
   const joinRoom = (roomId: string, userName: string) => {
-    // For offline mode, we simulate joining a room
     setRoom({ id: roomId, name: `Room ${roomId}`, users: [], createdAt: new Date(), updatedAt: new Date() })
     setIsConnected(true)
   }
@@ -226,8 +224,7 @@ export const WhiteboardProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   }
 
   const sendDrawing = (path: DrawingPath) => {
-    // In offline mode, drawings are already added to state via dispatch
-    // No need to send to server
+    // No-op in offline mode
   }
 
   const clearCanvas = () => {

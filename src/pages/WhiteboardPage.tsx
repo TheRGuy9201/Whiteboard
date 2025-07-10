@@ -24,9 +24,9 @@ const WhiteboardPage: React.FC = () => {
   }
 
   return (
-    <div className="h-screen bg-gray-50 flex flex-col overflow-hidden">
+    <div className="h-screen bg-gray-100 flex flex-col overflow-hidden">
       {/* Header */}
-      <header className="border-b border-gray-200 bg-white px-4 py-3 flex items-center justify-between">
+      <header className="border-b border-gray-200 bg-white/90 backdrop-blur-md px-4 py-3 flex items-center justify-between z-40">
         <div className="flex items-center space-x-3">
           <button
             onClick={togglePageNavigation}
@@ -49,20 +49,18 @@ const WhiteboardPage: React.FC = () => {
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden"> {/* No padding needed as toolbar is at bottom */}
         {/* Page Navigation - Toggleable */}
         {isPageNavVisible && <PageNavigation />}
         
         {/* Canvas Area */}
-        <div className="flex-1 relative bg-white overflow-hidden">
+        <div className={`flex-1 relative bg-gray-100 overflow-hidden transition-all duration-300 ${!isPageNavVisible ? 'px-8' : 'px-2'}`}>
           <WhiteboardCanvas />
         </div>
       </div>
-
-      {/* Bottom Toolbar */}
-      <div className="border-t border-gray-200 bg-white">
-        <Toolbar />
-      </div>
+      
+      {/* Toolbar rendered outside the flex container for proper positioning */}
+      <Toolbar />
     </div>
   )
 }
