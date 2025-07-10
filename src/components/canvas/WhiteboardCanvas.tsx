@@ -1,8 +1,8 @@
 import React, { useRef, useEffect, useState } from 'react'
-import { Stage, Layer, Line, Circle } from 'react-konva'
+import { Stage, Layer, Line } from 'react-konva'
 import { useWhiteboard } from '@/contexts/WhiteboardContext'
 import { generateId } from '@/lib/utils'
-import type { DrawingPath, Point } from '@/types'
+import type { DrawingPath } from '@/types'
 
 export const WhiteboardCanvas: React.FC = () => {
   const { state, dispatch, sendDrawing, getCurrentPage } = useWhiteboard()
@@ -58,7 +58,7 @@ export const WhiteboardCanvas: React.FC = () => {
     }
   }
 
-  const handleMouseDown = (e: any) => {
+  const handleMouseDown = (_e: any) => {
     if (state.currentTool === 'select' || !state.currentPageId) {
       return
     }
@@ -81,13 +81,14 @@ export const WhiteboardCanvas: React.FC = () => {
       tool: state.currentTool as any,
       timestamp: Date.now(),
       pageId: state.currentPageId!,
+      opacity: state.currentOpacity / 100, // Convert percentage to decimal
     }
 
     setCurrentPath(newPath)
     dispatch({ type: 'START_DRAWING' })
   }
 
-  const handleMouseMove = (e: any) => {
+  const handleMouseMove = (_e: any) => {
     if (!state.isDrawing || !currentPath || state.currentTool === 'select') {
       return
     }
@@ -131,7 +132,7 @@ export const WhiteboardCanvas: React.FC = () => {
         lineCap="round"
         lineJoin="round"
         globalCompositeOperation={path.tool === 'eraser' ? 'destination-out' : 'source-over'}
-        opacity={path.tool === 'highlighter' ? 0.5 : 1}
+        opacity={path.opacity !== undefined ? path.opacity : (path.tool === 'highlighter' ? 0.5 : 1)}
       />
     )
   }
@@ -150,7 +151,7 @@ export const WhiteboardCanvas: React.FC = () => {
         lineCap="round"
         lineJoin="round"
         globalCompositeOperation={currentPath.tool === 'eraser' ? 'destination-out' : 'source-over'}
-        opacity={currentPath.tool === 'highlighter' ? 0.5 : 1}
+        opacity={currentPath.opacity !== undefined ? currentPath.opacity : (currentPath.tool === 'highlighter' ? 0.5 : 1)}
       />
     )
   }

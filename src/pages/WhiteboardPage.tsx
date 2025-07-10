@@ -1,14 +1,14 @@
 import React from 'react'
 import { useParams } from 'react-router-dom'
 import { Menu, X } from 'lucide-react'
-import { WhiteboardCanvas } from '@/components/canvas/WhiteboardCanvas'
+import { ScrollableWhiteboard } from '@/components/canvas/ScrollableWhiteboard'
 import { Toolbar } from '@/components/toolbar/Toolbar'
 import { PageNavigation } from '@/components/notebook/PageNavigation'
 import { useWhiteboard } from '@/contexts/WhiteboardContext'
 
 const WhiteboardPage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
-  const { room, joinRoom, getCurrentPage } = useWhiteboard()
+  const { room, joinRoom, getCurrentPage, state } = useWhiteboard()
   const [isPageNavVisible, setIsPageNavVisible] = React.useState(true)
 
   const currentPage = getCurrentPage()
@@ -43,8 +43,13 @@ const WhiteboardPage: React.FC = () => {
             Whiteboard {id} {currentPage && `• ${currentPage.name}`}
           </h1>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-4">
           <span className="text-sm text-gray-600">Offline Mode</span>
+          {state.pages.length > 1 && (
+            <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-md">
+              Use Alt+←/→ to navigate pages
+            </span>
+          )}
         </div>
       </header>
 
@@ -55,7 +60,7 @@ const WhiteboardPage: React.FC = () => {
         
         {/* Canvas Area */}
         <div className={`flex-1 relative bg-gray-100 overflow-hidden transition-all duration-300 ${!isPageNavVisible ? 'px-8' : 'px-2'}`}>
-          <WhiteboardCanvas />
+          <ScrollableWhiteboard />
         </div>
       </div>
       

@@ -11,6 +11,7 @@ export interface DrawingPath {
   tool: 'pen' | 'highlighter' | 'eraser'
   timestamp: number
   pageId: string
+  opacity?: number
 }
 
 export interface WhiteboardPage {
@@ -28,6 +29,7 @@ export interface WhiteboardState {
   currentTool: 'pen' | 'highlighter' | 'eraser' | 'select'
   currentColor: string
   currentWidth: number
+  currentOpacity: number
   isDrawing: boolean
   canvasSize: { width: number; height: number }
   zoom: number
@@ -102,6 +104,7 @@ export type WhiteboardAction =
   | { type: 'SET_TOOL'; payload: WhiteboardState['currentTool'] }
   | { type: 'SET_COLOR'; payload: string }
   | { type: 'SET_WIDTH'; payload: number }
+  | { type: 'SET_OPACITY'; payload: number }
   | { type: 'START_DRAWING' }
   | { type: 'STOP_DRAWING' }
   | { type: 'ADD_PATH'; payload: DrawingPath }

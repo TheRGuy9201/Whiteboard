@@ -212,7 +212,8 @@ export const WhiteboardProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     return state.pages.find(page => page.id === state.currentPageId)
   }
 
-  const joinRoom = (roomId: string, userName: string) => {
+  const joinRoom = (roomId: string, _userName: string) => {
+    // userName is intentionally prefixed with _ as it's not used in offline mode
     setRoom({ id: roomId, name: `Room ${roomId}`, users: [], createdAt: new Date(), updatedAt: new Date() })
     setIsConnected(true)
   }
@@ -223,7 +224,8 @@ export const WhiteboardProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setIsConnected(false)
   }
 
-  const sendDrawing = (path: DrawingPath) => {
+  const sendDrawing = (_path: DrawingPath) => {
+    // path is intentionally prefixed with _ as it's not used in offline mode
     // No-op in offline mode
   }
 
