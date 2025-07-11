@@ -65,7 +65,7 @@ const WhiteboardPage: React.FC = () => {
       </div>
       
       {/* Toolbar rendered outside the flex container for proper positioning */}
-      <Toolbar />
+      <Toolbar isPageNavVisible={isPageNavVisible} />
     </div>
   )
 }

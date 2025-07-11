@@ -31,6 +31,7 @@ export interface WhiteboardState {
   currentWidth: number
   currentOpacity: number
   isDrawing: boolean
+  currentPath: DrawingPath | null
   canvasSize: { width: number; height: number }
   zoom: number
   offset: Point
@@ -107,6 +108,8 @@ export type WhiteboardAction =
   | { type: 'SET_OPACITY'; payload: number }
   | { type: 'START_DRAWING' }
   | { type: 'STOP_DRAWING' }
+  | { type: 'SET_CURRENT_PATH'; payload: DrawingPath | null }
+  | { type: 'UPDATE_CURRENT_PATH'; payload: DrawingPath }
   | { type: 'ADD_PATH'; payload: DrawingPath }
   | { type: 'UPDATE_PATH'; payload: { id: string; points: Point[] } }
   | { type: 'SET_ZOOM'; payload: number }

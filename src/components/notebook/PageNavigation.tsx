@@ -2,6 +2,7 @@ import React from 'react'
 import { motion } from 'framer-motion'
 import { Plus, ChevronDown, ChevronRight, Trash2, Copy } from 'lucide-react'
 import { useWhiteboard } from '@/contexts/WhiteboardContext'
+import { PageThumbnail } from './PageThumbnail'
 import { cn } from '@/lib/utils'
 
 export const PageNavigation: React.FC = () => {
@@ -77,6 +78,18 @@ export const PageNavigation: React.FC = () => {
                   )}>
                     {page.name}
                   </span>
+                  {/* Mini thumbnail indicator */}
+                  {(page.paths.length > 0 || (page.id === state.currentPageId && state.currentPath)) && (
+                    <div className="w-4 h-4 bg-gray-200 rounded border overflow-hidden">
+                      <PageThumbnail 
+                        paths={page.paths}
+                        currentPath={page.id === state.currentPageId ? state.currentPath : null}
+                        width={16}
+                        height={16}
+                        className="w-full h-full"
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -117,14 +130,14 @@ export const PageNavigation: React.FC = () => {
                 className="px-6 pb-3"
               >
                 <div className="bg-white border border-gray-200 rounded-lg p-3 relative">
-                  <div className="aspect-video bg-gray-50 rounded border flex items-center justify-center">
-                    {page.paths.length > 0 ? (
-                      <div className="text-sm text-gray-600">
-                        ✏️ Has content
-                      </div>
-                    ) : (
-                      <div className="text-sm text-gray-400">Empty page</div>
-                    )}
+                  <div className="aspect-video bg-gray-50 rounded border overflow-hidden">
+                    <PageThumbnail 
+                      paths={page.paths}
+                      currentPath={page.id === state.currentPageId ? state.currentPath : null}
+                      width={240}
+                      height={135}
+                      className="w-full h-full"
+                    />
                   </div>
                   
                   {/* Quick Actions */}

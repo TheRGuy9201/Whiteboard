@@ -19,6 +19,7 @@ const generateInitialState = (): WhiteboardState => {
     currentWidth: 2,
     currentOpacity: 80, // Better default for highlighter transparency
     isDrawing: false,
+    currentPath: null,
     canvasSize: { width: 1920, height: 1080 },
     zoom: 1,
     offset: { x: 0, y: 0 }
@@ -40,7 +41,11 @@ const whiteboardReducer = (state: WhiteboardState, action: WhiteboardAction): Wh
     case 'START_DRAWING':
       return { ...state, isDrawing: true }
     case 'STOP_DRAWING':
-      return { ...state, isDrawing: false }
+      return { ...state, isDrawing: false, currentPath: null }
+    case 'SET_CURRENT_PATH':
+      return { ...state, currentPath: action.payload }
+    case 'UPDATE_CURRENT_PATH':
+      return { ...state, currentPath: action.payload }
     case 'ADD_PATH':
       return {
         ...state,

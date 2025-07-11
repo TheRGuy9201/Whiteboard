@@ -8,7 +8,6 @@ export const WhiteboardCanvas: React.FC = () => {
   const { state, dispatch, sendDrawing, getCurrentPage } = useWhiteboard()
   const stageRef = useRef<any>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const [currentPath, setCurrentPath] = useState<DrawingPath | null>(null)
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 })
 
   const currentPage = getCurrentPage()
@@ -82,17 +81,18 @@ export const WhiteboardCanvas: React.FC = () => {
       tool: state.currentTool as any,
       timestamp: Date.now(),
       pageId: state.currentPageId!,
-      opacity: state.currentTool === 'highlighter' ? 
+      opacity: state.currentTool === 'eraser' ? 1 : // Eraser always full opacity
+               state.currentTool === 'highlighter' ? 
                (state.currentOpacity / 100) * 0.6 : // Highlighter is more transparent
                state.currentOpacity / 100, // Convert percentage to decimal
     }
 
-    setCurrentPath(newPath)
+    dispatch({ type: 'SET_CURRENT_PATH', payload: newPath })
     dispatch({ type: 'START_DRAWING' })
   }
 
   const handleMouseMove = (_e: any) => {
-    if (!state.isDrawing || !currentPath || state.currentTool === 'select') {
+    if (!state.isDrawing || !state.currentPath || state.currentTool === 'select') {
       return
     }
 
@@ -102,22 +102,21 @@ export const WhiteboardCanvas: React.FC = () => {
     if (!point) return
     
     const updatedPath = {
-      ...currentPath,
-      points: [...currentPath.points, { x: point.x, y: point.y }],
+      ...state.currentPath,
+      points: [...state.currentPath.points, { x: point.x, y: point.y }],
     }
 
-    setCurrentPath(updatedPath)
+    dispatch({ type: 'UPDATE_CURRENT_PATH', payload: updatedPath })
   }
 
   const handleMouseUp = () => {
-    if (!currentPath) {
+    if (!state.currentPath) {
       return
     }
 
-    dispatch({ type: 'ADD_PATH', payload: currentPath })
+    dispatch({ type: 'ADD_PATH', payload: state.currentPath })
     dispatch({ type: 'STOP_DRAWING' })
-    sendDrawing(currentPath)
-    setCurrentPath(null)
+    sendDrawing(state.currentPath)
   }
 
   const renderPath = (path: DrawingPath) => {
@@ -135,26 +134,26 @@ export const WhiteboardCanvas: React.FC = () => {
         lineCap={path.tool === 'highlighter' ? 'butt' : 'round'}
         lineJoin={path.tool === 'highlighter' ? 'miter' : 'round'}
         globalCompositeOperation={path.tool === 'eraser' ? 'destination-out' : 'source-over'}
-        opacity={path.opacity !== undefined ? path.opacity : (path.tool === 'highlighter' ? 0.4 : 1)}
+        opacity={path.tool === 'eraser' ? 1 : (path.opacity !== undefined ? path.opacity : (path.tool === 'highlighter' ? 0.4 : 1))}
       />
     )
   }
 
   const renderCurrentPath = () => {
-    if (!currentPath || currentPath.points.length < 1) return null
+    if (!state.currentPath || state.currentPath.points.length < 1) return null
 
-    const points = currentPath.points.flatMap(p => [p.x, p.y])
+    const points = state.currentPath.points.flatMap(p => [p.x, p.y])
     
     return (
       <Line
         points={points}
-        stroke={currentPath.color}
-        strokeWidth={currentPath.width}
+        stroke={state.currentPath.color}
+        strokeWidth={state.currentPath.width}
         tension={0.5}
-        lineCap={currentPath.tool === 'highlighter' ? 'butt' : 'round'}
-        lineJoin={currentPath.tool === 'highlighter' ? 'miter' : 'round'}
-        globalCompositeOperation={currentPath.tool === 'eraser' ? 'destination-out' : 'source-over'}
-        opacity={currentPath.opacity !== undefined ? currentPath.opacity : (currentPath.tool === 'highlighter' ? 0.4 : 1)}
+        lineCap={state.currentPath.tool === 'highlighter' ? 'butt' : 'round'}
+        lineJoin={state.currentPath.tool === 'highlighter' ? 'miter' : 'round'}
+        globalCompositeOperation={state.currentPath.tool === 'eraser' ? 'destination-out' : 'source-over'}
+        opacity={state.currentPath.tool === 'eraser' ? 1 : (state.currentPath.opacity !== undefined ? state.currentPath.opacity : (state.currentPath.tool === 'highlighter' ? 0.4 : 1))}
       />
     )
   }
