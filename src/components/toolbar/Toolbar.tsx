@@ -13,7 +13,8 @@ const toolItems = [
 
 const colors = [
   '#000000', '#FF0000', '#00FF00', '#0000FF', '#FFFF00',
-  '#FF00FF', '#00FFFF', '#FFA500', '#800080', '#FFC0CB'
+  '#FF00FF', '#00FFFF', '#FFA500', '#800080', '#FFC0CB',
+  '#FFD700', '#32CD32', '#FF69B4', '#87CEEB', '#DDA0DD'
 ]
 
 export const Toolbar: React.FC = () => {
@@ -22,7 +23,17 @@ export const Toolbar: React.FC = () => {
 
   const handleToolChange = (tool: any) => {
     dispatch({ type: 'SET_TOOL', payload: tool })
-    if (tool === 'pen' || tool === 'highlighter') {
+    
+    // Auto-adjust settings for highlighter
+    if (tool === 'highlighter') {
+      if (state.currentColor === '#000000') {
+        dispatch({ type: 'SET_COLOR', payload: '#FFFF00' }) // Yellow for highlighting
+      }
+      if (state.currentOpacity > 60) {
+        dispatch({ type: 'SET_OPACITY', payload: 40 }) // More transparent for highlighting
+      }
+      setShowOptions(tool)
+    } else if (tool === 'pen') {
       setShowOptions(tool)
     } else {
       setShowOptions(null)

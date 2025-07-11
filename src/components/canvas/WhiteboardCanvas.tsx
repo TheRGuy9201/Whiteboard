@@ -52,9 +52,9 @@ export const WhiteboardCanvas: React.FC = () => {
       case 'eraser':
         return 'cursor-crosshair'
       case 'select':
-        return 'cursor-move'
+        return 'cursor-default'
       default:
-        return 'cursor-crosshair'
+        return 'cursor-default'
     }
   }
 
@@ -77,11 +77,14 @@ export const WhiteboardCanvas: React.FC = () => {
       id: generateId(),
       points: [{ x: point.x, y: point.y }],
       color: state.currentTool === 'eraser' ? '#FFFFFF' : state.currentColor,
-      width: state.currentTool === 'eraser' ? state.currentWidth * 2 : state.currentWidth,
+      width: state.currentTool === 'eraser' ? state.currentWidth * 2 : 
+             state.currentTool === 'highlighter' ? state.currentWidth * 3 : state.currentWidth,
       tool: state.currentTool as any,
       timestamp: Date.now(),
       pageId: state.currentPageId!,
-      opacity: state.currentOpacity / 100, // Convert percentage to decimal
+      opacity: state.currentTool === 'highlighter' ? 
+               (state.currentOpacity / 100) * 0.6 : // Highlighter is more transparent
+               state.currentOpacity / 100, // Convert percentage to decimal
     }
 
     setCurrentPath(newPath)
@@ -129,10 +132,10 @@ export const WhiteboardCanvas: React.FC = () => {
         stroke={path.color}
         strokeWidth={path.width}
         tension={0.5}
-        lineCap="round"
-        lineJoin="round"
+        lineCap={path.tool === 'highlighter' ? 'butt' : 'round'}
+        lineJoin={path.tool === 'highlighter' ? 'miter' : 'round'}
         globalCompositeOperation={path.tool === 'eraser' ? 'destination-out' : 'source-over'}
-        opacity={path.opacity !== undefined ? path.opacity : (path.tool === 'highlighter' ? 0.5 : 1)}
+        opacity={path.opacity !== undefined ? path.opacity : (path.tool === 'highlighter' ? 0.4 : 1)}
       />
     )
   }
@@ -148,10 +151,10 @@ export const WhiteboardCanvas: React.FC = () => {
         stroke={currentPath.color}
         strokeWidth={currentPath.width}
         tension={0.5}
-        lineCap="round"
-        lineJoin="round"
+        lineCap={currentPath.tool === 'highlighter' ? 'butt' : 'round'}
+        lineJoin={currentPath.tool === 'highlighter' ? 'miter' : 'round'}
         globalCompositeOperation={currentPath.tool === 'eraser' ? 'destination-out' : 'source-over'}
-        opacity={currentPath.opacity !== undefined ? currentPath.opacity : (currentPath.tool === 'highlighter' ? 0.5 : 1)}
+        opacity={currentPath.opacity !== undefined ? currentPath.opacity : (currentPath.tool === 'highlighter' ? 0.4 : 1)}
       />
     )
   }
@@ -175,7 +178,7 @@ export const WhiteboardCanvas: React.FC = () => {
           onTouchMove={handleMouseMove}
           onTouchEnd={handleMouseUp}
           className={getCursorStyle()}
-          style={{ cursor: 'crosshair' }}
+          style={{ cursor: state.currentTool === 'select' ? 'default' : 'crosshair' }}
         >
           <Layer>            
             {/* Existing paths */}

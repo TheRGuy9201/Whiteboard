@@ -14,10 +14,10 @@ const generateInitialState = (): WhiteboardState => {
       updatedAt: new Date()
     }],
     currentPageId: firstPageId,
-    currentTool: 'pen',
+    currentTool: 'select',
     currentColor: '#000000',
     currentWidth: 2,
-    currentOpacity: 100, // ✅ Added
+    currentOpacity: 80, // Better default for highlighter transparency
     isDrawing: false,
     canvasSize: { width: 1920, height: 1080 },
     zoom: 1,
