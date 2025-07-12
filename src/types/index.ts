@@ -30,6 +30,7 @@ export interface WhiteboardState {
   currentColor: string
   currentWidth: number
   currentOpacity: number
+  eraserMode: 'stroke' | 'partial'
   isDrawing: boolean
   currentPath: DrawingPath | null
   canvasSize: { width: number; height: number }
@@ -106,6 +107,7 @@ export type WhiteboardAction =
   | { type: 'SET_COLOR'; payload: string }
   | { type: 'SET_WIDTH'; payload: number }
   | { type: 'SET_OPACITY'; payload: number }
+  | { type: 'SET_ERASER_MODE'; payload: 'stroke' | 'partial' }
   | { type: 'START_DRAWING' }
   | { type: 'STOP_DRAWING' }
   | { type: 'SET_CURRENT_PATH'; payload: DrawingPath | null }

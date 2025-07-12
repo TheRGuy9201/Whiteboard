@@ -18,6 +18,7 @@ const generateInitialState = (): WhiteboardState => {
     currentColor: '#000000',
     currentWidth: 2,
     currentOpacity: 80, // Better default for highlighter transparency
+    eraserMode: 'stroke', // Default eraser mode
     isDrawing: false,
     currentPath: null,
     canvasSize: { width: 1920, height: 1080 },
@@ -38,6 +39,8 @@ const whiteboardReducer = (state: WhiteboardState, action: WhiteboardAction): Wh
       return { ...state, currentWidth: action.payload }
     case 'SET_OPACITY':
       return { ...state, currentOpacity: action.payload } // ✅ Added
+    case 'SET_ERASER_MODE':
+      return { ...state, eraserMode: action.payload }
     case 'START_DRAWING':
       return { ...state, isDrawing: true }
     case 'STOP_DRAWING':
