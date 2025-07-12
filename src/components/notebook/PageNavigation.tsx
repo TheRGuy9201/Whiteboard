@@ -15,11 +15,13 @@ export const PageNavigation: React.FC = () => {
     clearPage 
   } = useWhiteboard()
 
-  const insertPageAfter = (pageId: string) => {
+  const insertPageAfter = (_pageId: string) => {
+    // TODO: Implement insertion after specific page
     addNewPage()
   }
 
-  const insertPageBefore = (pageId: string) => {
+  const insertPageBefore = (_pageId: string) => {
+    // TODO: Implement insertion before specific page
     addNewPage()
   }
 
